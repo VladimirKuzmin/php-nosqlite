@@ -1,0 +1,23 @@
+{
+    "name": "svarog/nosqlite-php",
+    "description": "NoSQL wrapper for sqlite database",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vladimir Kuzmin",
+            "email": "Vladimir.A.Kuzmin@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": ">=3.7"
+    },
+    "autoload": {
+        "psr-0": {
+            "NoSQLite": "src/"
+        }
+    }
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<phpunit convertNoticesToExceptions="false"
+        convertWarningsToExceptions="false">
+
+    <testsuites>
+        <testsuite name="NoSQLite test suite">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <ini name="auto_prepend_file" value="./tests/include.php" />
+    </php>
+
+</phpunit>
