@@ -20,7 +20,7 @@ class Storage {
      */
     public function getCollection($name, $class=null) {
         if (is_null($class)) {
-            $class = SimpleCollection::getClass();
+            $class = SimpleCollection::class;
         }
         return new $class($this, $name);
     }
@@ -90,7 +90,7 @@ class Storage {
     }
 
     public function getTableFields($table) {
-        $fields = array();
+        $fields = [];
         $results = $this->db->query("PRAGMA table_info({$table})");
         while ($row = $results->fetchArray()) {
             $fields []= $row['name'];

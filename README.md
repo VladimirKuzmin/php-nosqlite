@@ -3,16 +3,12 @@ php-nosqlite
 
 NoSQL wrapper for SQLite.
 
-The library allows to:
- - store documents in database
- - search documents by id or by matching pattern
- - use index on any field of document
+Features:
+ - searching documents by id or by matching a pattern
+ - able to use an index on any property of document
  
 TODO:
- - refactor documents and queries
- - create aggregation framework as awesome as MongoDB has
- - write documentation and tests
- - add join-like functionality
+ - nothing
  
 Usage
 ============
@@ -22,7 +18,7 @@ Usage
 use NoSQLite\Collection\IndexedCollection;
 use NoSQLite\Document\Document;
 use NoSQLite\Index\Index;
-use NoSQLite\Key\String as StringKey;
+use NoSQLite\Field\String;
 use NoSQLite\Storage;
 
 $storage = new Storage('file.nosqlite');
@@ -32,7 +28,7 @@ $collection = $storage->getCollection('collection_name');
 
 // create indexed collection
 $collection = $storage->getCollection(
-    'collection_name', IndexedCollection::getClass());
+    'collection_name', IndexedCollection::class);
 
 // save document
 $id = $collection->save(new Document([
@@ -48,19 +44,16 @@ $collection->get($id);
 
 // search by pattern matching
 $collection->find([
-    'author' => ['name' => 'Douglas']
-]);
+    'author' => ['name' => 'Douglas']]);
 
 // use comparator in pattern
 $collection->find([
-    'author' => ['surname' => StringKey::not_contains('Rowling')]
-]);
+    'author' => ['surname' => String::not_contains('Rowling')]]);
 
 // ensure index on nested field author.name (type: string)
-$collection->ensureIndex(new Index(new StringKey('author', 'name')));
+$collection->ensureIndex(new Index(new String('author', 'name')));
 
 // from now this query uses index
 $collection->find([
-    'author' => ['name' => StringKey::startswith('Doug')]
-]);
+    'author' => ['name' => String::startswith('Doug')]]);
 ```

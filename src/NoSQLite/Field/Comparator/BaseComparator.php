@@ -1,6 +1,6 @@
 <?php
 
-namespace NoSQLite\Key\Comparator;
+namespace NoSQLite\Field\Comparator;
 
 
 use NoSQLite\Object;
@@ -12,7 +12,7 @@ class BaseComparator extends Object {
     protected $not = false;
 
     /**
-     * @var null|\NoSQLite\Key\Base\FieldKey
+     * @var null|\NoSQLite\Field\Base\Field
      */
     protected $key_class = null;
     protected $value = null;

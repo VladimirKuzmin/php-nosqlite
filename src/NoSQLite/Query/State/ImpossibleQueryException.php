@@ -3,6 +3,4 @@
 namespace NoSQLite\Query\State;
 
 
-class ImpossibleQueryException extends \Exception {
-
-} 
+class ImpossibleQueryException extends \Exception {}

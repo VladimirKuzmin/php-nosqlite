@@ -1,5 +1,5 @@
 <?php
-namespace NoSQLite\Key\Comparator;
+namespace NoSQLite\Field\Comparator;
 
 
 use NoSQLite\Utils;

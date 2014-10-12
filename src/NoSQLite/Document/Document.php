@@ -44,7 +44,7 @@ class Document extends ArrayObject {
     }
 
     public function getId() {
-        return $this->offsetExists('id')?$this['id']:null;
+        return $this->offsetExists('id') ? $this['id'] : null;
     }
 
     public function setId($id) {

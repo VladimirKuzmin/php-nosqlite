@@ -1,10 +1,10 @@
 <?php
 
-namespace NoSQLite\Key;
+namespace NoSQLite\Field;
 
-use NoSQLite\Key\Base\FieldKey;
+use NoSQLite\Field\Base\Field;
 
-class String extends FieldKey {
+class String extends Field {
 
     public function getFieldType() {
         return 'TEXT';
@@ -14,7 +14,7 @@ class String extends FieldKey {
         if (is_string($val)) {
             return (string)$val;
         }
-        if (is_callable(array($val, '__toString'))) {
+        if (is_callable([$val, '__toString'])) {
             /** @noinspection PhpUndefinedMethodInspection */
             return $val->__toString();
         }

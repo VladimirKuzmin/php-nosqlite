@@ -11,7 +11,7 @@ use NoSQLite\Query\State\ImpossibleQueryException;
 class Query {
 
     protected $collection = null;
-    protected $where = array();
+    protected $where = [];
 
     /**
      * @var null|PossibleQuery|ImpossibleQuery

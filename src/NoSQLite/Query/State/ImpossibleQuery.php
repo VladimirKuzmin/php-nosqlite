@@ -22,6 +22,6 @@ class ImpossibleQuery extends Object implements IQueryState {
     }
 
     function execute($where, SimpleCollection $collection) {
-        return array();
+        return [];
     }
 }

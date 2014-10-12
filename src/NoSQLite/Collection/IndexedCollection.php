@@ -5,8 +5,8 @@ namespace NoSQLite\Collection;
 
 use NoSQLite\Document\Document;
 use NoSQLite\Index\Index;
-use NoSQLite\Key\Base\AbstractKey;
-use NoSQLite\Key\Comparator\BaseComparator;
+use NoSQLite\Field\Base\AbstractField;
+use NoSQLite\Field\Comparator\BaseComparator;
 use NoSQLite\Serializer\AbstractSerializer;
 use NoSQLite\Storage;
 
@@ -63,11 +63,11 @@ class IndexedCollection extends SimpleCollection {
     }
 
     public function loadIndices() {
-        $this->indices = array();
+        $this->indices = [];
         $results = $this->storage->execute("
             SELECT name FROM sqlite_master
             WHERE type='index' AND tbl_name=:tbl",
-            array('tbl' => $this->keys_table)
+            ['tbl' => $this->keys_table]
         );
         while ($row = $results->fetchArray()) {
             $this->indices []= $row['name'];
@@ -103,8 +103,6 @@ class IndexedCollection extends SimpleCollection {
             }
             $this->flushNewIndices();
             $this->db->query('COMMIT TRANSACTION');
-            $this->loadKeys(false);
-            $this->loadIndices();
         } catch (\Exception $e) {
             $this->db->query('ROLLBACK TRANSACTION');
             throw $e;
@@ -120,25 +118,26 @@ class IndexedCollection extends SimpleCollection {
     }
 
     protected function flushNewIndices() {
-        $this->flushNewKeys();
-        /** @var $index Index */
-        foreach ($this->indices_to_append as $index) {
-            $this->db->query("CREATE INDEX IF NOT EXISTS {$index} ON {$this->keys_table} ("
-                .implode(',', $index->getKeys()).")");
+        if ($this->indices_to_append) {
+            $this->flushNewKeys();
+            /** @var $index Index */
+            foreach ($this->indices_to_append as $index) {
+                $this->db->query("CREATE INDEX IF NOT EXISTS {$index} ON {$this->keys_table} ("
+                    .implode(',', $index->getKeys()).")");
+            }
+            $this->loadIndices();
         }
-        $this->indices_to_append = array();
+        $this->indices_to_append = [];
     }
 
     protected function flushNewKeys() {
         if ($this->keys_to_append) {
-            $add = array();
-            $select_fields = array();
-            $fields = array();
-            /** @var $key \NoSQLite\Key\Base\FieldKey */
+            $add = $select_fields = $fields = [];
+            /** @var $key \NoSQLite\Field\Base\Field */
             foreach ($this->keys_to_append as $key) {
-                $add []= array(
+                $add []= [
                     'key' => $key,
-                    'add' => "ADD COLUMN {$key} ".$key->getFieldType());
+                    'add' => "ADD COLUMN {$key} ".$key->getFieldType()];
                 $function_name = $this->registerKeyHandler($key);
                 $fields []= (string)$key;
                 $select_fields []= "{$function_name}(id, data)";
@@ -149,18 +148,16 @@ class IndexedCollection extends SimpleCollection {
                 $this->storage->execute($sql);
                 $sql = "INSERT INTO {$this->key_instances_table} (class, field) VALUES (:class, :field)";
                 $this->storage->execute(
-                    $sql, array(
+                    $sql, [
                         'class' => $key::getClass(),
-                        'field' => $this->serializer->serialize($key->getField())
-                    )
-                );
+                        'field' => $this->serializer->serialize($key->getField())]);
             }
             $sql = "
                 REPLACE INTO {$this->keys_table}
                     (id,".implode(',', $fields).")
-                    SELECT id, ".implode(',', $select_fields)." FROM {$this->data_table}
-            ";
+                    SELECT id, ".implode(',', $select_fields)." FROM {$this->data_table}";
             $this->storage->execute($sql);
+            $this->loadKeys(false);
         }
     }
 
@@ -168,12 +165,12 @@ class IndexedCollection extends SimpleCollection {
         return $this->keys_table;
     }
 
-    protected function extractComparatorsFromCondition($condition, array $context=array()) {
-        $cmp = array();
+    protected function extractComparatorsFromCondition($condition, array $context=[]) {
+        $cmp = [];
         foreach ($condition as $k => $v) {
             array_push($context, $k);
             if ($v instanceof BaseComparator) {
-                $cmp []= array((array)$context /* make copy of current context */, $v);
+                $cmp []= [(array)$context /* make a copy of current context */, $v];
                 unset($condition[$k]);
             } else if (is_array($v) || ($v instanceof \ArrayObject)) {
                 list($cmp_new, $v_new) = $this->extractComparatorsFromCondition($v, $context);
@@ -186,33 +183,31 @@ class IndexedCollection extends SimpleCollection {
             }
             array_pop($context);
         }
-        return array($cmp, $condition);
+        return [$cmp, $condition];
     }
 
     public function find(array $conditions) {
         list($comparators, $conditions) = $this->extractComparatorsFromCondition($conditions);
         $keys = array_flip($this->getKeys());
-        $where_func = array();
-        $where_keys = array();
+        $where_func = $where_keys = [];
         foreach ($comparators as list($context, $cmp)) {
             /** @var $cmp BaseComparator */
             $key_class = $cmp->getKeyClass();
             //TODO: unpack context and remove workaround from FieldKey::__construct()
-            /** @var $key AbstractKey */
+            /** @var $key AbstractField */
             $key = new $key_class($context);
             $function = $this->registerKeyHandler($key);
             if (array_key_exists($key->getName(), $keys)) {
-                $where_keys []= array($cmp, $key->getName());
+                $where_keys []= [$cmp, $key->getName()];
             } else {
-                $where_func []= array($cmp, $function);
+                $where_func []= [$cmp, $function];
             }
         }
         $query = "SELECT * FROM {$this->data_table} D";
         if ($where_keys) {
             $query .= " INNER JOIN {$this->keys_table} K ON K.id=D.id";
         }
-        $where = array();
-        $query_args = array();
+        $where = $query_args = [];
         foreach ($where_keys as $w) {
             $placeholder = ':'.md5(implode('::', $w));
             /** @var $cmp BaseComparator */
@@ -237,19 +232,17 @@ class IndexedCollection extends SimpleCollection {
         $this->storage->begin();
         $res = parent::saveDocument($doc);
         if ($this->key_instances) {
-            $fields = array();
-            $values = array();
+            $fields = $values = [];
             foreach ($this->key_instances as $key) {
-                /** @var $key AbstractKey */
+                /** @var $key AbstractField */
                 $fields []= (string)$key;
                 $values[":{$key}"] = $key->apply($doc);
             }
             $sql = "
-                    REPLACE INTO {$this->keys_table}
-                        (id,".implode(',', $fields).")
-                        VALUES
-                        (:id,".implode(',', array_keys($values)).")
-                ";
+                REPLACE INTO {$this->keys_table}
+                    (id,".implode(',', $fields).")
+                    VALUES
+                    (:id,".implode(',', array_keys($values)).")";
             $values['id'] = $doc->getId();
             $this->storage->execute($sql, $values);
         }

@@ -1,11 +1,11 @@
 <?php
 
-namespace NoSQLite\Key;
+namespace NoSQLite\Field;
 
-use NoSQLite\Key\Base\FieldKey;
+use NoSQLite\Field\Base\Field;
 
 
-class Raw extends FieldKey {
+class Raw extends Field {
 
     public function getFieldType() {
         return 'TEXT';

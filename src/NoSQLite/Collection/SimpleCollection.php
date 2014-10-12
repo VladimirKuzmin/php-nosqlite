@@ -4,7 +4,7 @@ namespace NoSQLite\Collection;
 
 
 use NoSQLite\Document\Document;
-use NoSQLite\Key\Base\AbstractKey;
+use NoSQLite\Field\Base\AbstractField;
 use NoSQLite\Object;
 use NoSQLite\Query\Query;
 use NoSQLite\Serializer\AbstractSerializer;
@@ -17,7 +17,7 @@ class SimpleCollection extends Object {
     protected $name;
     protected $data_table;
     protected $serializer;
-    protected $registered_handlers = array();
+    protected $registered_handlers = [];
     protected $storage;
 
     public function __construct(Storage $storage, $name, AbstractSerializer $serializer=null) {
@@ -42,7 +42,7 @@ class SimpleCollection extends Object {
 
     protected function __sqlite_tableExists($table) {
         return $this->storage->fetchValue(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=:tbl", array('tbl' => $table));
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=:tbl", ['tbl' => $table]);
     }
 
     public function save($doc) {
@@ -66,7 +66,7 @@ class SimpleCollection extends Object {
         $id = $doc->getId();
         if (is_null($id)) {
             $this->storage->execute(
-                "INSERT INTO {$this->data_table} (data) VALUES (:str)", array('str' => $str));
+                "INSERT INTO {$this->data_table} (data) VALUES (:str)", ['str' => $str]);
             $doc['id'] = $this->db->lastInsertRowID();
         } else {
             $this->storage->execute(
@@ -83,7 +83,7 @@ class SimpleCollection extends Object {
     public function get($id) {
         $id = (int)$id;
         $data = $this->storage->fetchValue(
-            "SELECT data FROM {$this->data_table} WHERE id=:id", array('id' => $id));
+            "SELECT data FROM {$this->data_table} WHERE id=:id", ['id' => $id]);
         return $this->unserializeDocument($data, $id);
     }
 
@@ -115,7 +115,7 @@ class SimpleCollection extends Object {
         return $unserialize;
     }
 
-    protected function registerKeyHandler(AbstractKey $key) {
+    protected function registerKeyHandler(AbstractField $key) {
         $function_name = "f{$key}";
         if (!@$this->registered_handlers[$function_name]) {
             $unserialize = $this->getUnserializeFunction();
@@ -134,7 +134,7 @@ class SimpleCollection extends Object {
 
     protected function _find(array $conditions, $query, $query_args=null) {
         $r = $this->storage->execute($query, $query_args);
-        $result = array();
+        $result = [];
         while (false !== ($row = $r->fetchArray(SQLITE3_NUM))) {
             $doc = $this->unserializeDocument($row[1], $row[0]);
             if ($doc->match($conditions)) {

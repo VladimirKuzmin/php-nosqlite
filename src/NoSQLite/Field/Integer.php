@@ -1,10 +1,10 @@
 <?php
 
-namespace NoSQLite\Key;
+namespace NoSQLite\Field;
 
-use NoSQLite\Key\Base\FieldKey;
+use NoSQLite\Field\Base\Field;
 
-class Integer extends FieldKey {
+class Integer extends Field {
 
     public function getFieldType() {
         return 'INTEGER';

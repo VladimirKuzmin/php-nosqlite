@@ -1,10 +1,10 @@
 <?php
 
-namespace NoSQLite\Key\Base;
+namespace NoSQLite\Field\Base;
 
 use NoSQLite\Object;
 
-abstract class AbstractKey extends Object {
+abstract class AbstractField extends Object {
     protected $name;
 
     protected function buildName() {
@@ -30,5 +30,4 @@ abstract class AbstractKey extends Object {
      * @return string|int|float|\DateTime
      */
     abstract function apply($obj);
-
 } 
